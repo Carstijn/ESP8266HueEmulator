@@ -268,7 +268,7 @@ int ssdpMsgFormatCallback(SSDPClass *ssdp, char *buffer, int buff_len,
       interval,
       ipString.c_str(), port, schemaURL,
       modelName, modelNumber,
-      "001788FFFE142F92",
+      bridgeIDString.c_str(),
       deviceType,
       uuid);
   }
