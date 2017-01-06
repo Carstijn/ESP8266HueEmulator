@@ -904,6 +904,7 @@ bool parseHueLightInfo(HueLightInfo currentInfo, aJsonObject *parsedRoot, HueLig
       newInfo->effect = EFFECT_NONE;
     }
   }
+  
   // pull alert
   aJsonObject* alertState = aJson.getObjectItem(parsedRoot, "alert");
   if (alertState) {
@@ -915,6 +916,12 @@ bool parseHueLightInfo(HueLightInfo currentInfo, aJsonObject *parsedRoot, HueLig
     } else {
       newInfo->alert = ALERT_NONE;
     }
+  }
+
+  // pull transitiontime
+  aJsonObject* transitiontimeState = aJson.getObjectItem(parsedRoot, "transitiontime");
+  if (transitiontimeState) {
+    newInfo->transitionTime = transitiontimeState->valueint;
   }
 
   aJsonObject* hueState = aJson.getObjectItem(parsedRoot, "hue");
