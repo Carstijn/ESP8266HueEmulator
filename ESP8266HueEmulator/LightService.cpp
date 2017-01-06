@@ -230,7 +230,7 @@ static const char* _ssdp_response_template =
   "HTTP/1.1 200 OK\r\n"
   "EXT:\r\n"
   "CACHE-CONTROL: max-age=%u\r\n" // SSDP_INTERVAL
-  "LOCATION: http://%u.%u.%u.%u:%u/%s\r\n" // WiFi.localIP(), _port, _schemaURL
+  "LOCATION: http://%s:%u/%s\r\n" // WiFi.localIP(), _port, _schemaURL
   "SERVER: Arduino/1.0 UPNP/1.1 %s/%s\r\n" // _modelName, _modelNumber
   "hue-bridgeid: %s\r\n"
   "ST: %s\r\n"  // _deviceType
