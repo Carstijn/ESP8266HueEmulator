@@ -117,11 +117,10 @@ void setup() {
   WiFi.begin(ssid, password);
   infoLight(white);
 
-  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("WiFi Failed");
-    // Show that we are connected
+  while (WiFi.status() != WL_CONNECTED) {
     infoLight(red);
-    while (1) delay(100);
+    delay(500);
+    Serial.print(".");
   }
   
   // Port defaults to 8266
