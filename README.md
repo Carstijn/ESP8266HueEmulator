@@ -1,6 +1,8 @@
 # ESP8266HueEmulator [![Build Status](https://travis-ci.org/probonopd/ESP8266HueEmulator.svg)](https://travis-ci.org/probonopd/ESP8266HueEmulator)
 This sketch emulates a Philips Hue bridge running on an ESP8266 using the Arduino IDE. Right now this is a proof-of-concept; contributions are highly welcome. Hue client apps can [discover](../../wiki/Discovery) the emulated bridge and begin talking to it using the Hue protocol.
 
+This version is adapted to the H801 ledcontroller using a oldschool led strip with just RGB leds.
+
 ![phihue_e27_starterset_430x300 jpg](https://cloud.githubusercontent.com/assets/2480569/8511601/e692e61c-231f-11e5-842d-4fedd6f900b4.jpg)
 
 __Optionally__, vou can use a strip of individually addressable WS2812b NeoPixels and attach it to GPIO2. The sketch talks to a strip of NeoPixels connected to GPIO2 (= pin D4 on the WEMOS D1 mini) of the ESP8266 with no additional circuitry. Right now the sketch uses the NeoPixels to tell that it is powered on, connected to the WLAN etc., and can switch on the first 3 NeoPixels using a Hue client (e.g., the iOS app).

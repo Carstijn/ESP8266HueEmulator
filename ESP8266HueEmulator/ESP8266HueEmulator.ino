@@ -26,9 +26,11 @@ RgbColor white = RgbColor(COLOR_SATURATION);
 RgbColor black = RgbColor(0);
 
 // Settings for the NeoPixels
-#define pixelCount 30
-#define pixelPin 2 // Strip is attached to GPIO2 on ESP-01
-NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart800KbpsMethod> strip(pixelCount, pixelPin);
+#define pixelCount 1
+#define pixelPinR 12
+#define pixelPinG 15
+#define pixelPinB 13
+NeoPixelBus<NeoGrbFeature, PinPWMMethod>strip(pixelCount, pixelPinR, pixelPinG, pixelPinB);
 NeoPixelAnimator animator(pixelCount, NEO_MILLISECONDS); // NeoPixel animation management object
 
 HsbColor getHsb(int hue, int sat, int bri) {
@@ -111,6 +113,9 @@ void setup() {
   // Show that the NeoPixels are alive
   delay(120); // Apparently needed to make the first few pixels animate correctly
   Serial.begin(115200);
+  
+  //Setup serial pins for H801 Wifi RGB led controller
+  Serial.pins(2, 3);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
