@@ -110,6 +110,9 @@ void setup() {
   strip.Begin();
   strip.Show();
 
+  //Lightswitch
+  pinMode(5, INPUT);
+
   // Show that the NeoPixels are alive
   delay(120); // Apparently needed to make the first few pixels animate correctly
   Serial.begin(115200);
@@ -166,11 +169,30 @@ void setup() {
   for (int i = 0; i < MAX_LIGHT_HANDLERS && i < pixelCount; i++) {
     LightService.setLightHandler(i, new PixelHandler());
   }
+
+  //Always on after power up
+  strip.SetPixelColor(1,white);
 }
+
+//lightswitch
+bool switchstatus = false;
 
 void loop() {
   ArduinoOTA.handle();
-  
+
+  //lightswitch
+  if(digitalRead(5) != switchstatus){
+    if(digitalRead(5)) {
+      Serial.println("Lightswitch ON");
+      strip.SetPixelColor(0,white);
+    }
+    else {
+      Serial.println("Lightswitch OFF");
+      strip.SetPixelColor(0,black);
+    }
+    switchstatus = digitalRead(5);
+  }
+
   LightService.update();
 
   static unsigned long update_strip_time = 0;  //  keeps track of pixel refresh rate... limits updates to 33 Hz
