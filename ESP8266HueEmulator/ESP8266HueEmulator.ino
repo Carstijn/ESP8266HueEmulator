@@ -71,7 +71,10 @@ class PixelHandler : public LightHandler {
             if (currentHue > 1) currentHue -= 1;
             HslColor updatedColor = HslColor(currentHue, newColor.S, newColor.L);
             RgbColor currentColor = updatedColor;
-            strip.SetPixelColor(lightNumber, updatedColor);
+
+            for(int i=lightNumber * NUM_PIXELS_PER_LIGHT; i < (lightNumber * NUM_PIXELS_PER_LIGHT) + NUM_PIXELS_PER_LIGHT; i++) {
+              strip.SetPixelColor(i, updatedColor);
+            }
 
             // loop the animation until canceled
             if (param.state == AnimationState_Completed) {
@@ -85,7 +88,10 @@ class PixelHandler : public LightHandler {
         {
           // progress will start at 0.0 and end at 1.0
           HslColor updatedColor = HslColor::LinearBlend<NeoHueBlendShortestDistance>(originalColor, newColor, param.progress);
-          strip.SetPixelColor(lightNumber, updatedColor);
+          
+          for(int i=lightNumber * NUM_PIXELS_PER_LIGHT; i < (lightNumber * NUM_PIXELS_PER_LIGHT) + NUM_PIXELS_PER_LIGHT; i++) {
+            strip.SetPixelColor(i, updatedColor);
+          }
         };
         animator.StartAnimation(lightNumber, _info.transitionTime, animUpdate);
       }
@@ -95,7 +101,10 @@ class PixelHandler : public LightHandler {
         {
           // progress will start at 0.0 and end at 1.0
           HslColor updatedColor = HslColor::LinearBlend<NeoHueBlendShortestDistance>(originalColor, black, param.progress);
-          strip.SetPixelColor(lightNumber, updatedColor);
+          
+          for(int i=lightNumber * NUM_PIXELS_PER_LIGHT; i < (lightNumber * NUM_PIXELS_PER_LIGHT) + NUM_PIXELS_PER_LIGHT; i++) {
+            strip.SetPixelColor(i, updatedColor);
+          }
         };
         animator.StartAnimation(lightNumber, _info.transitionTime, animUpdate);
       }
