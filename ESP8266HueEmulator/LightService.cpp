@@ -345,7 +345,7 @@ void on(HandlerFunction fn, const String &wcUri, HTTPMethod method, char wildcar
 }
 
 void descriptionFn() {
-  String str = "<root><specVersion><major>1</major><minor>0</minor></specVersion><URLBase>http://" + ipString + ":80/</URLBase><device><deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType><friendlyName>Philips hue (" + ipString + ")</friendlyName><manufacturer>Royal Philips Electronics</manufacturer><manufacturerURL>http://www.philips.com</manufacturerURL><modelDescription>Philips hue Personal Wireless Lighting</modelDescription><modelName>Philips hue bridge 2012</modelName><modelNumber>929000226503</modelNumber><modelURL>http://www.meethue.com</modelURL><serialNumber>00178817122c</serialNumber><UDN>uuid:2f402f80-da50-11e1-9b23-00178817122c</UDN><presentationURL>index.html</presentationURL><iconList><icon><mimetype>image/png</mimetype><height>48</height><width>48</width><depth>24</depth><url>hue_logo_0.png</url></icon><icon><mimetype>image/png</mimetype><height>120</height><width>120</width><depth>24</depth><url>hue_logo_3.png</url></icon></iconList></device></root>";
+  String str = "<root><specVersion><major>1</major><minor>0</minor></specVersion><URLBase>http://" + ipString + ":80/</URLBase><device><deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType><friendlyName>Philips hue (" + ipString + ")</friendlyName><manufacturer>Royal Philips Electronics</manufacturer><manufacturerURL>http://www.philips.com</manufacturerURL><modelDescription>Philips hue Personal Wireless Lighting</modelDescription><modelName>Philips hue bridge 2012</modelName><modelNumber>929000226503</modelNumber><modelURL>http://www.meethue.com</modelURL><serialNumber>"+macString+"</serialNumber><UDN>uuid:2f402f80-da50-11e1-9b23-"+macString+"</UDN><presentationURL>index.html</presentationURL><iconList><icon><mimetype>image/png</mimetype><height>48</height><width>48</width><depth>24</depth><url>hue_logo_0.png</url></icon><icon><mimetype>image/png</mimetype><height>120</height><width>120</width><depth>24</depth><url>hue_logo_3.png</url></icon></iconList></device></root>";
   HTTP->send(200, "text/plain", str);
   Serial.println(str);
 }
@@ -356,13 +356,44 @@ void unimpFn(WcFnRequestHandler *handler, String requestUri, HTTPMethod method) 
   Serial.println(str);
 }
 
-aJsonObject *generateConfigPutResponse(aJsonObject *body) {
+aJsonObject *wrapWithSuccess(aJsonObject *body) {
+  aJsonObject *success = aJson.createObject();
+  aJson.addItemToObject(success, "success", body);
+  return success;
+}
+
+// targetBase is assumed to have a trailing slash (/)
+aJsonObject *generateTargetPutResponse(aJsonObject *body, String targetBase) {
   aJsonObject *root = aJson.createArray();
   for (int i = 0; i < aJson.getArraySize(body); i++) {
     aJsonObject *success = aJson.createObject();
-    aJson.addItemToArray(root, success);
+    aJson.addItemToArray(root, wrapWithSuccess(success));
     aJsonObject *entry = aJson.getArrayItem(body, i);
-    aJson.addStringToObject(success, (String("/config/")+entry->name).c_str(), entry->valuestring);
+    String target = targetBase + entry->name;
+    switch (entry->type) {
+      case aJson_Boolean:
+        aJson.addBooleanToObject(success, target.c_str(), entry->valuebool);
+        break;
+      case aJson_Int:
+        aJson.addNumberToObject(success, target.c_str(), entry->valueint);
+        break;
+      case aJson_String:
+        aJson.addStringToObject(success, target.c_str(), entry->valuestring);
+        break;
+      case aJson_Float:
+        aJson.addNumberToObject(success, target.c_str(), entry->valuefloat);
+        break;
+      case aJson_Array: {
+        aJsonObject *xy = aJson.createArray();
+        aJson.addItemToObject(success, target.c_str(), xy);
+        for (int j = 0; j < aJson.getArraySize(entry); j++) {
+          aJson.addItemToArray(xy, aJson.createItem(aJson.getArrayItem(entry, j)->valuefloat));
+        }
+        break;
+      }
+      default:
+        break;
+    }
   }
   return root;
 }
@@ -384,7 +415,7 @@ void configFn(WcFnRequestHandler *handler, String requestUri, HTTPMethod method)
       Serial.print("Body: ");
       Serial.println(HTTP->arg("plain"));
       aJsonObject* body = aJson.parse(( char*) HTTP->arg("plain").c_str());
-      sendJson(generateConfigPutResponse(body));
+      sendJson(generateTargetPutResponse(body, "/config/"));
       aJson.deleteItem(body);
       break;
     }
@@ -478,49 +509,6 @@ void scenesIdFn(WcFnRequestHandler *handler, String requestUri, HTTPMethod metho
   }
 }
 
-aJsonObject *wrapWithSuccess(aJsonObject *body) {
-  aJsonObject *success = aJson.createObject();
-  aJson.addItemToObject(success, "success", body);
-  return success;
-}
-
-aJsonObject *generateScenesIdLightPutResponse(aJsonObject *body, String sceneId, String lightId) {
-  aJsonObject *root = aJson.createArray();
-  for (int i = 0; i < aJson.getArraySize(body); i++) {
-    aJsonObject *success = aJson.createObject();
-    aJson.addItemToArray(root, wrapWithSuccess(success));
-    aJsonObject *entry = aJson.getArrayItem(body, i);
-    // remove /api/api
-    String target = "/scenes/" + sceneId + "/lightstates/" + lightId + "/";
-    target += entry->name;
-    switch (entry->type) {
-      case aJson_Boolean:
-        aJson.addBooleanToObject(success, target.c_str(), entry->valuebool);
-        break;
-      case aJson_Int:
-        aJson.addNumberToObject(success, target.c_str(), entry->valueint);
-        break;
-      case aJson_String:
-        aJson.addStringToObject(success, target.c_str(), entry->valuestring);
-        break;
-      case aJson_Float:
-        aJson.addNumberToObject(success, target.c_str(), entry->valuefloat);
-        break;
-      case aJson_Array: {
-        aJsonObject *xy = aJson.createArray();
-        aJson.addItemToObject(success, target.c_str(), xy);
-        for (int j = 0; j < aJson.getArraySize(entry); j++) {
-          aJson.addItemToArray(xy, aJson.createItem(aJson.getArrayItem(entry, j)->valuefloat));
-        }
-        break;
-      }
-      default:
-        break;
-    }
-  }
-  return root;
-}
-
 void scenesIdLightFn(WcFnRequestHandler *handler, String requestUri, HTTPMethod method) {
   switch (method) {
     case HTTP_PUT: {
@@ -528,7 +516,7 @@ void scenesIdLightFn(WcFnRequestHandler *handler, String requestUri, HTTPMethod 
       Serial.println(HTTP->arg("plain"));
       // XXX Do something with this information...
       aJsonObject* body = aJson.parse(( char*) HTTP->arg("plain").c_str());
-      sendJson(generateScenesIdLightPutResponse(body, handler->getWildCard(1), handler->getWildCard(2)));
+      sendJson(generateTargetPutResponse(body, "/scenes/" + handler->getWildCard(1) + "/lightstates/" + handler->getWildCard(2) + "/"));
       aJson.deleteItem(body);
       break;
     }
@@ -695,6 +683,7 @@ void lightsIdStateFn(WcFnRequestHandler *whandler, String requestUri, HTTPMethod
         return;
       }
       handler->handleQuery(numberOfTheLight, newInfo, parsedRoot);
+      sendJson(generateTargetPutResponse(parsedRoot, "/lights/" + whandler->getWildCard(1) + "/state/"));
       aJson.deleteItem(parsedRoot);
       break;
     }
@@ -757,7 +746,7 @@ void LightServiceClass::begin(ESP8266WebServer *svr) {
   SSDP.setSchemaURL((char*)"description.xml");
   SSDP.setHTTPPort(80);
   SSDP.setName((char*)"Philips hue clone");
-  SSDP.setSerialNumber((char*)"001788102201");
+  SSDP.setSerialNumber(macString.c_str());
   SSDP.setURL((char*)"index.html");
   SSDP.setModelName((char*)"IpBridge");
   SSDP.setModelNumber((char*)"0.1");
